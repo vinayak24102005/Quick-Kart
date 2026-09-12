@@ -1,16 +1,40 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+
+import Login from './pages/Login'
+import Slidebar from './components/Slidebar'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './App.css'
+import {useAuth} from './context/AuthContext'
+
+import Dashboard from './pages/Dashboard'
+import Cart from './pages/Cart'
+import Checkout from './pages/Checkout'
+import Payments from './pages/Payment'
+import Settings from './pages/Settings'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {isLoggedin} = useAuth();
+  
+  if(!isLoggedin) {
+    return <Login/>
+  }
 
   return (
-    <div className="flex flex-col items-center content-center justify-center h-screen w-full">
-      <h1 className='text-9xl'>Hello</h1>      
-    </div>
+    <>
+      <BrowserRouter>
+          <Slidebar/>
+
+          <main className='ml-64'>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/payments" element={<Payments />} />
+              <Route path="/settings" element={<Settings />} />
+            </Routes>
+          </main>
+      </BrowserRouter>
+    </>
   )
 }
 
