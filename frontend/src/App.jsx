@@ -4,7 +4,6 @@ import Login from './pages/Login'
 import Slidebar from './components/Slidebar'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './App.css'
-import {useAuth} from './context/AuthContext'
 
 import Dashboard from './pages/Dashboard'
 import Cart from './pages/Cart'
@@ -15,7 +14,6 @@ import Register from './pages/register'
 import Layout from './components/Layout'
 
 function App() {
-  const {isLoggedin} = useAuth();
   
 
   return (
