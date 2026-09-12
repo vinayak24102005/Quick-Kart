@@ -13,48 +13,87 @@ const Sidebar = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const navItems = [
-    { label: "Dashboard", path: "/", icon: LayoutDashboard, end: true },
-    { label: "Cart", path: "/cart", icon: ShoppingCart },
-    { label: "Checkout", path: "/checkout", icon: CreditCard },
-    { label: "Payments", path: "/payments", icon: Wallet },
-    { label: "Settings", path: "/settings", icon: Settings },
-  ];
+  // Common styles
+  const baseStyle =
+    "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors";
+  const activeStyle = "bg-sky-100 text-sky-700 shadow-sm";
+  const inactiveStyle = "text-gray-600 hover:bg-sky-50 hover:text-sky-600";
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-sky-100 flex flex-col">
-
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b border-sky-100">
-        <h1 className="text-xl font-bold text-sky-600">
-          Quick-Kart
-        </h1>
+        <h1 className="text-xl font-bold text-sky-600">Quick-Kart</h1>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <li key={item.path}>
-                <NavLink
-                  to={item.path}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    `w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                      isActive
-                        ? "bg-sky-100 text-sky-700 shadow-sm"
-                        : "text-gray-600 hover:bg-sky-50 hover:text-sky-600"
-                    }`
-                  }
-                >
-                  <Icon size={20} />
-                  <span>{item.label}</span>
-                </NavLink>
-              </li>
-            );
-          })}
+          {/* Dashboard */}
+          <li>
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) =>
+                `${baseStyle} ${isActive ? activeStyle : inactiveStyle}`
+              }
+            >
+              <LayoutDashboard size={20} />
+              <span>Dashboard</span>
+            </NavLink>
+          </li>
+
+          {/* Cart */}
+          <li>
+            <NavLink
+              to="/cart"
+              className={({ isActive }) =>
+                `${baseStyle} ${isActive ? activeStyle : inactiveStyle}`
+              }
+            >
+              <ShoppingCart size={20} />
+              <span>Cart</span>
+            </NavLink>
+          </li>
+
+          {/* Checkout */}
+          <li>
+            <NavLink
+              to="/checkout"
+              className={({ isActive }) =>
+                `${baseStyle} ${isActive ? activeStyle : inactiveStyle}`
+              }
+            >
+              <CreditCard size={20} />
+              <span>Checkout</span>
+            </NavLink>
+          </li>
+
+          {/* Payments */}
+          <li>
+            <NavLink
+              to="/payments"
+              className={({ isActive }) =>
+                `${baseStyle} ${isActive ? activeStyle : inactiveStyle}`
+              }
+            >
+              <Wallet size={20} />
+              <span>Payments</span>
+            </NavLink>
+          </li>
+
+          {/* Settings */}
+          <li>
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `${baseStyle} ${isActive ? activeStyle : inactiveStyle}`
+              }
+            >
+              <Settings size={20} />
+              <span>Settings</span>
+            </NavLink>
+          </li>
         </ul>
       </nav>
 
@@ -71,7 +110,6 @@ const Sidebar = () => {
           <span>Logout</span>
         </button>
       </div>
-
     </aside>
   );
 };
