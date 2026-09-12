@@ -14,8 +14,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   // Common styles
-  const baseStyle =
-    "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors";
+  const baseStyle = "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors";
   const activeStyle = "bg-sky-100 text-sky-700 shadow-sm";
   const inactiveStyle = "text-gray-600 hover:bg-sky-50 hover:text-sky-600";
 
