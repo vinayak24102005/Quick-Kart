@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import { Link } from "react-router-dom";
 
 function register() {
       // For Form Inputs
@@ -100,12 +101,12 @@ function register() {
         {/* Bottom */}
         <p className="text-center text-sm text-gray-500 mt-5">
           Already have an account?{" "}
-          <button
-            type="button"
+          <Link
+            to="/login"
             className="text-sky-600 hover:underline font-medium"
           >
             Login
-          </button>
+          </Link>
         </p>
 
       </div>
