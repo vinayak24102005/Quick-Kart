@@ -11,6 +11,8 @@ import Cart from './pages/Cart'
 import Checkout from './pages/Checkout'
 import Payments from './pages/Payment'
 import Settings from './pages/Settings'
+import Register from './pages/register'
+import Layout from './components/Layout'
 
 function App() {
   const {isLoggedin} = useAuth();
@@ -22,17 +24,19 @@ function App() {
   return (
     <>
       <BrowserRouter>
-          <Slidebar/>
+          <Routes>
+            {/* No Sidebar */}
+            <Route path="/register" element={<Register />} />
 
-          <main className='ml-64'>
-            <Routes>
+            {/* Sidebar Layout */}
+            <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </main>
+            </Route>
+          </Routes>
       </BrowserRouter>
     </>
   )
