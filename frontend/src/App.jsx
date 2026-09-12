@@ -17,15 +17,13 @@ import Layout from './components/Layout'
 function App() {
   const {isLoggedin} = useAuth();
   
-  if(!isLoggedin) {
-    return <Login/>
-  }
 
   return (
     <>
       <BrowserRouter>
           <Routes>
             {/* No Sidebar */}
+            <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
             {/* Sidebar Layout */}
