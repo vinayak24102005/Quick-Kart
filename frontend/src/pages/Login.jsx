@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const [role, setRole] = useState("user");
 
@@ -15,6 +16,7 @@ const Login = () => {
     e.preventDefault();
 
     login(); 
+    navigate("/")
   };
 
   return (
@@ -77,6 +79,7 @@ const Login = () => {
           {/* Submit */}
           <button
             type="submit"
+            onClick={handleSubmit}
             className="w-full bg-sky-500 hover:bg-sky-600
             text-white font-medium py-2.5 rounded-lg transition shadow-md shadow-sky-100"
           >
