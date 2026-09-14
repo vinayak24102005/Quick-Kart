@@ -9,7 +9,13 @@ const app = express();
 
 connectDB();
 
-app.use(cors());
+//handle cors
+corsOptions = {
+  origin: 'http://localhost:5173',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true
+}
+app.use(cors(corsOptions));
 app.use(express.json());
 
 //routes
