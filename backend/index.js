@@ -9,6 +9,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+//routes
+const productRoutes = require("./routes/product.routes");
+app.use("/api/products", productRoutes);
+
 app.get('/',(req, res)=>{
     res.send("Server is running");
 })
