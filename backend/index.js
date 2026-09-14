@@ -1,13 +1,26 @@
 const express = require("express");
 const cors = require("cors");
 require('dotenv').config();
+const connectDB = require("./config/db");
 
 const PORT = process.env.PORT || 3000;
 
 const app = express();
 
-app.use(cors());
+connectDB();
+
+//handle cors
+corsOptions = {
+  origin: 'http://localhost:5173',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true
+}
+app.use(cors(corsOptions));
 app.use(express.json());
+
+//routes
+const productRoutes = require("./routes/product.routes");
+app.use("/api/products", productRoutes);
 
 app.get('/',(req, res)=>{
     res.send("Server is running");
