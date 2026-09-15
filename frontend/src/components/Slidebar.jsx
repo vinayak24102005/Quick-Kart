@@ -1,8 +1,7 @@
 import {
   LayoutDashboard,
   ShoppingCart,
-  CreditCard,
-  Wallet,
+  Handbag,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -28,7 +27,7 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-1">
-          {/* Dashboard */}
+          {/* Home */}
           <li>
             <NavLink
               to="/"
@@ -38,7 +37,7 @@ const Sidebar = () => {
               }
             >
               <LayoutDashboard size={20} />
-              <span>Dashboard</span>
+              <span>Home</span>
             </NavLink>
           </li>
 
@@ -58,28 +57,16 @@ const Sidebar = () => {
           {/* Checkout */}
           <li>
             <NavLink
-              to="/checkout"
+              to="/my-orders"
               className={({ isActive }) =>
                 `${baseStyle} ${isActive ? activeStyle : inactiveStyle}`
               }
             >
-              <CreditCard size={20} />
-              <span>Checkout</span>
+              <Handbag size={20} />
+              <span>My Orders</span>
             </NavLink>
           </li>
 
-          {/* Payments */}
-          <li>
-            <NavLink
-              to="/payments"
-              className={({ isActive }) =>
-                `${baseStyle} ${isActive ? activeStyle : inactiveStyle}`
-              }
-            >
-              <Wallet size={20} />
-              <span>Payments</span>
-            </NavLink>
-          </li>
 
           {/* Settings */}
           <li>

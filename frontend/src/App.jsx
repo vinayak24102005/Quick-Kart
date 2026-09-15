@@ -12,6 +12,8 @@ import Payments from './pages/Payment'
 import Settings from './pages/Settings'
 import Register from './pages/register'
 import Layout from './components/Layout'
+import Home from './pages/Home'
+import MyOrders from './pages/MyOrders'
 
 function App() {
   
@@ -26,8 +28,10 @@ function App() {
 
             {/* Sidebar Layout */}
             <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/settings" element={<Settings />} />
