@@ -1,15 +1,41 @@
 import {useState} from 'react'
-import { Link } from "react-router-dom";
+import { Link , useNavigate} from "react-router-dom";
 
 function register() {
       // For Form Inputs
-      const [username, setUsername] = useState("");
+      const [email, setEmail] = useState("");
       const [password, setPassword] = useState("");
       const [name, setName] = useState("");
       const [confirmPassword, setConfirmPassword] = useState("");
 
-      const handleSubmit = (e) => {
+      const navigate = useNavigate();
+
+      const handleSubmit = async (e) => {
         e.preventDefault();
+        try {
+          if(password !== confirmPassword){
+            alert("Passwords do not match");
+            return;
+          }
+          const response = await fetch("http://localhost:3000/api/auth/register", {
+            method: "POST",
+            headers : {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({name, email, password}),
+          });
+
+          const data = await response.json();
+          if(!response.ok){
+            alert(data.message);
+            navigate('/register')
+            return ;
+          }
+          navigate('/login')
+          alert(data.message);
+          console.log("JWT Token : ",data.token)
+
+        } catch(error){alert(error)}
     };
   return (
     <div className="min-h-screen bg-sky-50 flex items-center justify-center px-4">
@@ -50,8 +76,8 @@ function register() {
             <input
               type="email"
               placeholder="Enter your email"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5
               text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
             />
