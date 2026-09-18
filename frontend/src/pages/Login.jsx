@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { loginUser } from "../api/authApi";
 
 const Login = () => {
   const { login } = useAuth();
@@ -16,27 +17,19 @@ const Login = () => {
     e.preventDefault();
 
     try{
-      const response = await fetch("http://localhost:3000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data= await response.json()
-      if(!response.ok){
-        alert(data.message);
-        navigate('/login')
-        return;
-      }
-      alert(data.message);
-      console.log("JWT Token : ",data.token)
-      login(data.token, data.user);
+      const userData = await loginUser({ email, password });
+      alert("Login successful!");
+      login(userData.token);     
       navigate("/");
-
     }catch(error){
-      alert(error)
+      console.log(error);
+
+      if(error.response){
+        alert(error.response.data.message);
+      }
+      else{
+        alert("An error occurred. Please try again.");
+      }
     }
   };
 

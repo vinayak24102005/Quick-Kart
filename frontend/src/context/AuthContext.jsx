@@ -3,20 +3,16 @@ import {createContext, useState, useEffect, useContext} from "react";
 const AuthContext = createContext();
 
 export const AuthProvider = ({children}) =>{
-    const [isLoggedin, setIsLoggedin] = useState(false);
-    const [token, setToken] = useState(null);
-    const [user, setUser] = useState(null);
+    const [isLoggedin, setIsLoggedin] = useState(!!localStorage.getItem("token"));
 
-    const login =()=>{
+    const login =(token)=>{
+        localStorage.setItem("token", token);
         setIsLoggedin(true);
-        setToken(token);
-        setUser(user);
     }
 
     const logout =()=>{
+        localStorage.removeItem("token");
         setIsLoggedin(false);
-        setToken(null);
-        setUser(null);
     }
 
     return (
@@ -25,7 +21,6 @@ export const AuthProvider = ({children}) =>{
         </AuthContext.Provider>
     )
 }
-
 export const useAuth = () =>{
     return useContext(AuthContext);
 }

@@ -1,6 +1,6 @@
 import {useState} from 'react'
 import { Link , useNavigate} from "react-router-dom";
-
+import { registerUser } from '../api/authApi';
 function register() {
       // For Form Inputs
       const [email, setEmail] = useState("");
@@ -14,29 +14,18 @@ function register() {
         e.preventDefault();
         try {
           if(password !== confirmPassword){
-            alert("Passwords do not match");
+            alert("Passwords do not match!");
             return;
           }
-          const response = await fetch("http://localhost:3000/api/auth/register", {
-            method: "POST",
-            headers : {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({name, email, password}),
-          });
-
-          const data = await response.json();
-          if(!response.ok){
-            alert(data.message);
-            navigate('/register')
-            return ;
-          }
-          navigate('/login')
-          alert(data.message);
-          console.log("JWT Token : ",data.token)
-
-        } catch(error){alert(error)}
-    };
+          const userData = await registerUser({ name, email, password });
+          alert("Registration successful!");
+          navigate("/login");
+          console.log(userData);
+        } catch(error){
+          console.log(error);
+          alert("An error occurred. Please try again.");
+        }
+      };
   return (
     <div className="min-h-screen bg-sky-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-sky-100 shadow-xl rounded-2xl p-8">
