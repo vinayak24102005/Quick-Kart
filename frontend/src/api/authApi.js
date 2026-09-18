@@ -1,13 +1,21 @@
 import axios from "axios";
-
-const API_URL = "http://localhost:3000/api/auth/";
+import api from "./apiClient";
 
 export const registerUser = async (userData) => {
-    const response = await axios.post(`${API_URL}register`, userData);
-    return response.data;
+    try{
+        const response = await api.post("/auth/register", userData);
+        return response.data;
+    }catch(error){
+        alert(error)
+    }
+    
 };
 
 export const loginUser = async (userData) => {
-    const response = await axios.post(`${API_URL}login`, userData);
-    return response.data;
+    try{
+        const response = await api.post("/auth/login", userData);
+        return response.data;
+    }catch(error){
+        alert(error)
+    }
 }

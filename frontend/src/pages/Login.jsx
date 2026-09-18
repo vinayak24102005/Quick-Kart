@@ -19,7 +19,7 @@ const Login = () => {
     try{
       const userData = await loginUser({ email, password });
       alert("Login successful!");
-      login(userData.token);     
+      login(userData.token , userData.user);     
       navigate("/");
     }catch(error){
       console.log(error);
