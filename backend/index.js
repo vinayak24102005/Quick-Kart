@@ -5,6 +5,7 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/product.routes");
+const errorMiddleware = require("./middleware/errorMiddleware");
 
 const PORT = process.env.PORT || 3000;
 
@@ -31,6 +32,9 @@ app.use("/api/auth", authRoutes);
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
+
+// Error handling middleware
+app.use(errorMiddleware);
 
 // Start server
 app.listen(PORT, () => {
