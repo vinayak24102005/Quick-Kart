@@ -10,7 +10,6 @@ export const registerUser = async (userData) => {
     }
     
 };
-
 export const loginUser = async (userData) => {
     try{
         const response = await api.post("/auth/login", userData);
