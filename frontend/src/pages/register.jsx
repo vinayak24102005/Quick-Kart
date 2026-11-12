@@ -1,31 +1,46 @@
-import {useState} from 'react'
-import { Link , useNavigate} from "react-router-dom";
+import { useState } from 'react'
+import { Link, Navigate } from "react-router-dom";
+import { useAuth } from '../context/AuthContext';
 import { registerUser } from '../api/authApi';
-function register() {
+import { getErrorMessage } from '../utils/format';
+import Alert from '../components/Alert';
+
+function Register() {
+      const { isLoggedin, login } = useAuth();
+
       // For Form Inputs
       const [email, setEmail] = useState("");
       const [password, setPassword] = useState("");
       const [name, setName] = useState("");
       const [confirmPassword, setConfirmPassword] = useState("");
 
-      const navigate = useNavigate();
+      const [error, setError] = useState("");
+      const [loading, setLoading] = useState(false);
+
+      // Already logged in (including right after registering below)? Go to the shop.
+      if (isLoggedin) {
+        return <Navigate to="/" replace />;
+      }
 
       const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
+
+        if (password !== confirmPassword) {
+          setError("Passwords do not match");
+          return;
+        }
+
+        setLoading(true);
         try {
-          if(password !== confirmPassword){
-            alert("Passwords do not match!");
-            return;
-          }
-          const userData = await registerUser({ name, email, password });
-          alert("Registration successful!");
-          navigate("/login");
-          console.log(userData);
-        } catch(error){
-          console.log(error);
-          alert("An error occurred. Please try again.");
+          const data = await registerUser({ name, email, password });
+          login(data.token, data.user); // the new account is logged in straight away
+        } catch (err) {
+          setError(getErrorMessage(err));
+          setLoading(false);
         }
       };
+
   return (
     <div className="min-h-screen bg-sky-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-sky-100 shadow-xl rounded-2xl p-8">
@@ -39,23 +54,26 @@ function register() {
             Create your account
           </p>
         </div>
-        
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5
-                text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
-              />
-            </div>
+
+          <Alert>{error}</Alert>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5
+              text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
+            />
+          </div>
 
           {/* Email */}
           <div>
@@ -64,6 +82,7 @@ function register() {
             </label>
             <input
               type="email"
+              required
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -79,7 +98,9 @@ function register() {
             </label>
             <input
               type="password"
-              placeholder="Enter your password"
+              required
+              minLength={6}
+              placeholder="At least 6 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5
@@ -88,28 +109,29 @@ function register() {
           </div>
 
           {/* Confirm Password */}
-          
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                placeholder="Confirm your password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5
-                text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              required
+              placeholder="Confirm your password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5
+              text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
+            />
+          </div>
 
           {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-sky-500 hover:bg-sky-600
+            disabled={loading}
+            className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300
             text-white font-medium py-2.5 rounded-lg transition shadow-md shadow-sky-100"
           >
-            Create Account
+            {loading ? "Creating account..." : "Create Account"}
           </button>
         </form>
 
@@ -129,4 +151,4 @@ function register() {
   )
 }
 
-export default register
+export default Register

@@ -1,26 +1,24 @@
-import { Outlet, useNavigate } from "react-router-dom";
-import {useAuth} from '../context/AuthContext'
-import Slidebar from "./Slidebar";
-import { useEffect } from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Sidebar from "./Sidebar";
 
+// Wraps every page that needs a login: shows the sidebar, and sends
+// visitors who are not logged in to the login page.
 const Layout = () => {
-    const {isLoggedin} = useAuth();
-    const navigate = useNavigate();
+  const { isLoggedin } = useAuth();
 
-    useEffect(() => {
-        if(!isLoggedin){
-            navigate('/login');
-        }
-    })
-    
+  if (!isLoggedin) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
-    <>
-      <Slidebar />
+    <div className="min-h-screen bg-slate-50">
+      <Sidebar />
 
       <main className="ml-64">
         <Outlet />
       </main>
-    </>
+    </div>
   );
 };
 

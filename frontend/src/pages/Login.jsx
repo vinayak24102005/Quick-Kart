@@ -1,35 +1,36 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { loginUser } from "../api/authApi";
+import { getErrorMessage } from "../utils/format";
+import Alert from "../components/Alert";
 
 const Login = () => {
-  const { login } = useAuth();
-  const navigate = useNavigate();
-
-  const [role, setRole] = useState("user");
+  const { isLoggedin, login } = useAuth();
 
   // For Form Inputs
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Already logged in (including right after a successful login below)? Go to the shop.
+  if (isLoggedin) {
+    return <Navigate to="/" replace />;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    try{
-      const userData = await loginUser({ email, password });
-      alert("Login successful!");
-      login(userData.token , userData.user);     
-      navigate("/");
-    }catch(error){
-      console.log(error);
-
-      if(error.response){
-        alert(error.response.data.message);
-      }
-      else{
-        alert("An error occurred. Please try again.");
-      }
+    try {
+      const data = await loginUser({ email, password });
+      login(data.token, data.user); // saves the login, the page above then redirects
+    } catch (err) {
+      setError(getErrorMessage(err));
+      setLoading(false);
     }
   };
 
@@ -46,9 +47,11 @@ const Login = () => {
             Login to your account
           </p>
         </div>
-        
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+
+          <Alert>{error}</Alert>
 
           {/* Email */}
           <div>
@@ -57,6 +60,7 @@ const Login = () => {
             </label>
             <input
               type="email"
+              required
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -72,6 +76,7 @@ const Login = () => {
             </label>
             <input
               type="password"
+              required
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -80,24 +85,14 @@ const Login = () => {
             />
           </div>
 
-          {/* Forgot Password */}
-          <div className="text-right">
-            <button
-              type="button"
-              className="text-sm text-sky-600 hover:underline"
-            >
-              Forgot password?
-            </button>
-          </div>
-
           {/* Submit */}
           <button
             type="submit"
-            onClick={handleSubmit}
-            className="w-full bg-sky-500 hover:bg-sky-600
+            disabled={loading}
+            className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300
             text-white font-medium py-2.5 rounded-lg transition shadow-md shadow-sky-100"
           >
-           Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
