@@ -1,36 +1,35 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { loginUser } from "../api/authApi";
-import { getErrorMessage } from "../utils/format";
-import Alert from "../components/Alert";
+import { getErrorMessage } from "../api/apiClient";
+import { useToast } from "../context/ToastContext";
 
 const Login = () => {
-  const { isLoggedin, login } = useAuth();
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const { toast } = useToast();
 
   // For Form Inputs
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  // Already logged in (including right after a successful login below)? Go to the shop.
-  if (isLoggedin) {
-    return <Navigate to="/" replace />;
-  }
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
-
+    setSubmitting(true);
     try {
-      const data = await loginUser({ email, password });
-      login(data.token, data.user); // saves the login, the page above then redirects
+      const userData = await loginUser({ email, password });
+      login(userData.token, userData.user);
+      toast(`Welcome back, ${userData.user.name}!`);
+      navigate("/");
     } catch (err) {
       setError(getErrorMessage(err));
-      setLoading(false);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -47,11 +46,9 @@ const Login = () => {
             Login to your account
           </p>
         </div>
-
+        
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-
-          <Alert>{error}</Alert>
 
           {/* Email */}
           <div>
@@ -85,14 +82,18 @@ const Login = () => {
             />
           </div>
 
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert">{error}</p>
+          )}
+
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300
+            disabled={submitting}
+            className="w-full bg-sky-500 hover:bg-sky-600 disabled:opacity-60
             text-white font-medium py-2.5 rounded-lg transition shadow-md shadow-sky-100"
           >
-            {loading ? "Logging in..." : "Login"}
+           {submitting ? "Logging in..." : "Login"}
           </button>
         </form>
 

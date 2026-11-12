@@ -1,27 +1,34 @@
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true,
-        },
-        // Stored as a bcrypt hash, never as plain text
-        password: {
-            type: String,
-            required: true,
-        },
-    },
-    { timestamps: true }
+const addressSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, trim: true },
+    phone: { type: String, trim: true },
+    street: { type: String, trim: true },
+    city: { type: String, trim: true },
+    state: { type: String, trim: true },
+    postalCode: { type: String, trim: true },
+    country: { type: String, trim: true, default: "India" },
+  },
+  { _id: false }
 );
 
-const User = mongoose.model("User", userSchema);
-module.exports = User;
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: { type: String, required: true },
+    role: { type: String, enum: ["user", "admin"], default: "user" },
+    phone: { type: String, trim: true },
+    address: { type: addressSchema, default: () => ({}) },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("User", userSchema);

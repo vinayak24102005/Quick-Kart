@@ -1,154 +1,106 @@
-import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { updateProfile } from "../api/authApi";
-import { getErrorMessage } from "../utils/format";
-import Alert from "../components/Alert";
+import { useEffect, useState } from 'react'
+import { getProfile, updateProfile, changePassword } from '../api/userApi'
+import { getErrorMessage } from '../api/apiClient'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import Spinner from '../components/Spinner'
 
-const inputStyle =
-  "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition";
-const buttonStyle =
-  "bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition";
+const inputCls = 'w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition'
+const btnCls = 'bg-sky-500 hover:bg-sky-600 disabled:opacity-60 text-white font-medium px-5 py-2.5 rounded-lg transition shadow-md shadow-sky-100'
+
+const ADDRESS_FIELDS = [
+  ['fullName', 'Full name'], ['phone', 'Phone'], ['street', 'Street address'],
+  ['city', 'City'], ['state', 'State'], ['postalCode', 'Postal code'],
+]
 
 function Settings() {
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth()
+  const { toast } = useToast()
+  const [profile, setProfile] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [pw, setPw] = useState({ currentPassword: '', newPassword: '', confirm: '' })
+  const [pwSaving, setPwSaving] = useState(false)
 
-  // --- Profile form (name) ---
-  const [name, setName] = useState(user?.name || "");
-  const [profileMessage, setProfileMessage] = useState(null); // { type, text }
-  const [savingProfile, setSavingProfile] = useState(false);
+  useEffect(() => {
+    getProfile()
+      .then((p) => setProfile({ ...p, address: p.address || {} }))
+      .catch((e) => toast(getErrorMessage(e), 'error'))
+  }, [toast])
 
-  // --- Password form ---
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordMessage, setPasswordMessage] = useState(null); // { type, text }
-  const [savingPassword, setSavingPassword] = useState(false);
+  if (!profile) return <Spinner />
 
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault();
-    setProfileMessage(null);
-    setSavingProfile(true);
-
+  const saveProfile = async (e) => {
+    e.preventDefault()
+    setSaving(true)
     try {
-      const data = await updateProfile({ name });
-      updateUser(data.user); // so the sidebar shows the new name straight away
-      setProfileMessage({ type: "success", text: "Your name was updated." });
+      const saved = await updateProfile({ name: profile.name, phone: profile.phone, address: profile.address })
+      updateUser({ name: saved.name })
+      toast('Profile saved')
     } catch (err) {
-      setProfileMessage({ type: "error", text: getErrorMessage(err) });
+      toast(getErrorMessage(err), 'error')
     } finally {
-      setSavingProfile(false);
+      setSaving(false)
     }
-  };
+  }
 
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    setPasswordMessage(null);
-
-    if (newPassword !== confirmPassword) {
-      setPasswordMessage({ type: "error", text: "The new passwords do not match." });
-      return;
-    }
-
-    setSavingPassword(true);
+  const savePassword = async (e) => {
+    e.preventDefault()
+    if (pw.newPassword !== pw.confirm) return toast('New passwords do not match', 'error')
+    setPwSaving(true)
     try {
-      await updateProfile({ currentPassword, newPassword });
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setPasswordMessage({ type: "success", text: "Your password was changed." });
+      await changePassword({ currentPassword: pw.currentPassword, newPassword: pw.newPassword })
+      setPw({ currentPassword: '', newPassword: '', confirm: '' })
+      toast('Password updated')
     } catch (err) {
-      setPasswordMessage({ type: "error", text: getErrorMessage(err) });
+      toast(getErrorMessage(err), 'error')
     } finally {
-      setSavingPassword(false);
+      setPwSaving(false)
     }
-  };
+  }
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl">
+    <div className="p-6 md:p-8 max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
 
-      <div className="mt-6 space-y-6">
-        {/* Profile */}
-        <form onSubmit={handleProfileSubmit} className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-          <h2 className="font-semibold text-slate-800">Profile</h2>
+      <form onSubmit={saveProfile} className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <h2 className="font-semibold text-slate-800">Profile & default shipping address</h2>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <label className="block">
+            <span className="block text-sm font-medium text-gray-700 mb-1">Name</span>
+            <input required className={inputCls} value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
+          </label>
+          <label className="block">
+            <span className="block text-sm font-medium text-gray-700 mb-1">Email</span>
+            <input disabled className={`${inputCls} bg-gray-50 text-gray-500`} value={profile.email} />
+          </label>
+          {ADDRESS_FIELDS.map(([key, label]) => (
+            <label key={key} className="block">
+              <span className="block text-sm font-medium text-gray-700 mb-1">{label}</span>
+              <input
+                className={inputCls}
+                value={profile.address[key] || ''}
+                onChange={(e) => setProfile({ ...profile, address: { ...profile.address, [key]: e.target.value } })}
+              />
+            </label>
+          ))}
+        </div>
+        <button className={btnCls} disabled={saving}>{saving ? 'Saving...' : 'Save changes'}</button>
+      </form>
 
-          <Alert type={profileMessage?.type}>{profileMessage?.text}</Alert>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={user?.email || ""}
-              disabled
-              className={`${inputStyle} bg-slate-50 text-slate-500 cursor-not-allowed`}
-            />
-            <p className="mt-1 text-xs text-slate-400">Your email can not be changed.</p>
-          </div>
-
-          <button type="submit" disabled={savingProfile} className={buttonStyle}>
-            {savingProfile ? "Saving..." : "Save changes"}
-          </button>
-        </form>
-
-        {/* Password */}
-        <form onSubmit={handlePasswordSubmit} className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-          <h2 className="font-semibold text-slate-800">Change password</h2>
-
-          <Alert type={passwordMessage?.type}>{passwordMessage?.text}</Alert>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Current password</label>
-            <input
-              type="password"
-              required
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">New password</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              placeholder="At least 6 characters"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className={inputStyle}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm new password</label>
-            <input
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={inputStyle}
-            />
-          </div>
-
-          <button type="submit" disabled={savingPassword} className={buttonStyle}>
-            {savingPassword ? "Saving..." : "Change password"}
-          </button>
-        </form>
-      </div>
+      <form onSubmit={savePassword} className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <h2 className="font-semibold text-slate-800">Change password</h2>
+        <div className="grid sm:grid-cols-3 gap-4">
+          {[['currentPassword', 'Current password'], ['newPassword', 'New password'], ['confirm', 'Confirm new password']].map(([key, label]) => (
+            <label key={key} className="block">
+              <span className="block text-sm font-medium text-gray-700 mb-1">{label}</span>
+              <input required type="password" className={inputCls} value={pw[key]} onChange={(e) => setPw({ ...pw, [key]: e.target.value })} />
+            </label>
+          ))}
+        </div>
+        <button className={btnCls} disabled={pwSaving}>{pwSaving ? 'Updating...' : 'Update password'}</button>
+      </form>
     </div>
-  );
+  )
 }
 
-export default Settings;
+export default Settings

@@ -1,13 +1,9 @@
-import { useState } from 'react'
-import { Link, Navigate } from "react-router-dom";
-import { useAuth } from '../context/AuthContext';
+import {useState} from 'react'
+import { Link , useNavigate} from "react-router-dom";
 import { registerUser } from '../api/authApi';
-import { getErrorMessage } from '../utils/format';
-import Alert from '../components/Alert';
-
+import { getErrorMessage } from '../api/apiClient';
+import { useToast } from '../context/ToastContext';
 function Register() {
-      const { isLoggedin, login } = useAuth();
-
       // For Form Inputs
       const [email, setEmail] = useState("");
       const [password, setPassword] = useState("");
@@ -15,32 +11,32 @@ function Register() {
       const [confirmPassword, setConfirmPassword] = useState("");
 
       const [error, setError] = useState("");
-      const [loading, setLoading] = useState(false);
-
-      // Already logged in (including right after registering below)? Go to the shop.
-      if (isLoggedin) {
-        return <Navigate to="/" replace />;
-      }
+      const [submitting, setSubmitting] = useState(false);
+      const navigate = useNavigate();
+      const { toast } = useToast();
 
       const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
-
+        if (password.length < 6) {
+          setError("Password must be at least 6 characters");
+          return;
+        }
         if (password !== confirmPassword) {
           setError("Passwords do not match");
           return;
         }
-
-        setLoading(true);
+        setSubmitting(true);
         try {
-          const data = await registerUser({ name, email, password });
-          login(data.token, data.user); // the new account is logged in straight away
+          await registerUser({ name, email, password });
+          toast("Registration successful! Please log in.");
+          navigate("/login");
         } catch (err) {
           setError(getErrorMessage(err));
-          setLoading(false);
+        } finally {
+          setSubmitting(false);
         }
       };
-
   return (
     <div className="min-h-screen bg-sky-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white border border-sky-100 shadow-xl rounded-2xl p-8">
@@ -54,26 +50,24 @@ function Register() {
             Create your account
           </p>
         </div>
-
+        
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-
-          <Alert>{error}</Alert>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5
-              text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
-            />
-          </div>
+          
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Enter your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5
+                text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
+              />
+            </div>
 
           {/* Email */}
           <div>
@@ -99,8 +93,7 @@ function Register() {
             <input
               type="password"
               required
-              minLength={6}
-              placeholder="At least 6 characters"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5
@@ -109,29 +102,34 @@ function Register() {
           </div>
 
           {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              required
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5
-              text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
-            />
-          </div>
+          
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                required
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5
+                text-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition"
+              />
+            </div>
+
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert">{error}</p>
+          )}
 
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-sky-500 hover:bg-sky-600 disabled:bg-sky-300
+            disabled={submitting}
+            className="w-full bg-sky-500 hover:bg-sky-600 disabled:opacity-60
             text-white font-medium py-2.5 rounded-lg transition shadow-md shadow-sky-100"
           >
-            {loading ? "Creating account..." : "Create Account"}
+            {submitting ? "Creating account..." : "Create Account"}
           </button>
         </form>
 

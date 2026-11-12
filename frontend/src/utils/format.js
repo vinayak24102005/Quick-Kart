@@ -1,18 +1,21 @@
-// Small helpers used by many pages
+export const formatPrice = (n) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
 
-// 12.5 -> "$12.50"  (change the symbol here to change it everywhere)
-export const formatPrice = (amount) => `$${Number(amount || 0).toFixed(2)}`;
+export const formatDate = (d) =>
+  new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
-// "2026-11-12T10:00:00Z" -> "12 Nov 2026"
-export const formatDate = (date) =>
-  new Date(date).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+export const STATUS_STYLES = {
+  placed: "bg-sky-100 text-sky-700",
+  processing: "bg-amber-100 text-amber-700",
+  shipped: "bg-indigo-100 text-indigo-700",
+  delivered: "bg-emerald-100 text-emerald-700",
+  cancelled: "bg-red-100 text-red-600",
+  pending: "bg-amber-100 text-amber-700",
+  paid: "bg-emerald-100 text-emerald-700",
+  refunded: "bg-gray-200 text-gray-700",
+};
 
-// Pulls a readable message out of a failed API call
-export const getErrorMessage = (error) =>
-  error?.response?.data?.message ||
-  error?.message ||
-  "Something went wrong. Please try again.";
+export const FREE_SHIPPING_THRESHOLD = 500;
+export const SHIPPING_FEE = 49;
+export const calcShipping = (itemsTotal) =>
+  itemsTotal === 0 || itemsTotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;

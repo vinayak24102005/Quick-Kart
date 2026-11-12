@@ -1,37 +1,33 @@
-// Every error in the app ends up here (controllers call next(error)).
-// It sends back one consistent shape:  { success: false, message: "..." }
-const errorHandler = (err, req, res, next) => {
-  console.error("Error:", err.stack || err.message);
+const notFound = (req, res, next) => {
+  res.status(404);
+  next(new Error(`Route not found: ${req.method} ${req.originalUrl}`));
+};
 
-  // Controllers set the status first (res.status(400)) and then throw.
-  // If nobody set one, it is an unexpected error, so use 500.
-  let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+const errorHandler = (err, req, res, next) => {
+  let statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
   let message = err.message || "Server Error";
 
-  // Invalid MongoDB id, e.g. GET /api/products/abc
+  // Invalid ObjectId, e.g. /api/products/not-an-id
   if (err.name === "CastError") {
     statusCode = 400;
-    message = "Invalid id";
+    message = `Invalid ${err.path}: ${err.value}`;
   }
-
-  // A model rule failed, e.g. a required field is missing
+  // Mongoose validation errors
   if (err.name === "ValidationError") {
     statusCode = 400;
-    message = Object.values(err.errors)
-      .map((e) => e.message)
-      .join(", ");
+    message = Object.values(err.errors).map((e) => e.message).join(", ");
   }
-
-  // Duplicate value on a unique field, e.g. the same email twice
+  // Duplicate key (e.g. email already registered)
   if (err.code === 11000) {
-    statusCode = 400;
-    message = "That value is already in use";
+    statusCode = 409;
+    const field = Object.keys(err.keyPattern || {})[0] || "value";
+    message = `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`;
   }
 
-  res.status(statusCode).json({
-    success: false,
-    message,
-  });
+  if (statusCode >= 500) console.error("Error:", err.stack || err.message);
+
+  res.status(statusCode).json({ success: false, message });
 };
 
 module.exports = errorHandler;
+module.exports.notFound = notFound;

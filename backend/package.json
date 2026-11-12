@@ -5,8 +5,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "seed": "node seed.js",
-    "smoke": "node smoke-test.js"
+    "seed": "node scripts/seed.js"
   },
   "author": "",
   "license": "ISC",

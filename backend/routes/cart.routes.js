@@ -1,15 +1,13 @@
 const router = require("express").Router();
-const cartController = require("../controllers/cart.controllers");
+const c = require("../controllers/cart.controllers");
 const { protect } = require("../middleware/authMiddleware");
 
-// Every cart route needs a logged-in user
 router.use(protect);
 
-router.get("/", cartController.getCart);
-router.delete("/", cartController.clearCart);
-
-router.post("/items", cartController.addToCart);
-router.put("/items/:productId", cartController.updateCartItem);
-router.delete("/items/:productId", cartController.removeCartItem);
+router.get("/", c.getCart);
+router.post("/", c.addToCart);
+router.delete("/", c.clearCart);
+router.put("/:productId", c.updateCartItem);
+router.delete("/:productId", c.removeCartItem);
 
 module.exports = router;

@@ -1,70 +1,60 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
+import { useToast } from "./ToastContext";
+import { getErrorMessage } from "../api/apiClient";
 import * as cartApi from "../api/cartApi";
 
-// Keeps the shopping cart in one place so the product cards, the sidebar badge
-// and the Cart page all show the same thing.
-// The real cart lives on the server; this is just the latest copy of it.
 const CartContext = createContext();
-
-const EMPTY_CART = { items: [], total: 0 };
+const EMPTY = { items: [], total: 0, itemCount: 0 };
 
 export const CartProvider = ({ children }) => {
-  const { isLoggedin } = useAuth();
-  const [cart, setCart] = useState(EMPTY_CART);
+    const { isLoggedin } = useAuth();
+    const { toast } = useToast();
+    const [cart, setCart] = useState(EMPTY);
+    const [loading, setLoading] = useState(isLoggedin);
 
-  // true until the first load finishes, so pages can show "Loading..."
-  // instead of flashing "your cart is empty"
-  const [cartLoading, setCartLoading] = useState(true);
+    const refreshCart = useCallback(async () => {
+        setLoading(true);
+        try {
+            setCart(await cartApi.fetchCart());
+        } catch (error) {
+            toast(getErrorMessage(error), "error");
+        } finally {
+            setLoading(false);
+        }
+    }, [toast]);
 
-  // Load the cart when the user logs in, and forget it when they log out
-  useEffect(() => {
-    if (!isLoggedin) {
-      setCart(EMPTY_CART);
-      setCartLoading(false);
-      return;
-    }
-    setCartLoading(true);
-    cartApi
-      .getCart()
-      .then(setCart)
-      .catch((error) => console.error("Could not load the cart:", error))
-      .finally(() => setCartLoading(false));
-  }, [isLoggedin]);
+    // Load the cart on login, empty it on logout
+    useEffect(() => {
+        if (isLoggedin) refreshCart();
+        else setCart(EMPTY);
+    }, [isLoggedin, refreshCart]);
 
-  // Each action asks the server to change the cart, then stores the updated
-  // cart the server sends back. If the server refuses (for example "out of
-  // stock") the error is thrown so the page can show it.
-  const addToCart = async (productId, quantity = 1) =>
-    setCart(await cartApi.addCartItem(productId, quantity));
+    // Runs a cart API call, stores the returned cart, and reports errors as toasts.
+    const run = async (fn, successMessage) => {
+        try {
+            setCart(await fn());
+            if (successMessage) toast(successMessage);
+            return true;
+        } catch (error) {
+            toast(getErrorMessage(error), "error");
+            return false;
+        }
+    };
 
-  const updateQuantity = async (productId, quantity) =>
-    setCart(await cartApi.updateCartItem(productId, quantity));
+    const value = {
+        cart,
+        loading,
+        refreshCart,
+        addToCart: (productId, qty = 1) => run(() => cartApi.addCartItem(productId, qty), "Added to cart"),
+        updateQuantity: (productId, qty) => run(() => cartApi.updateCartItem(productId, qty)),
+        removeFromCart: (productId) => run(() => cartApi.removeCartItem(productId), "Item removed"),
+        clearCart: () => run(() => cartApi.clearCartApi()),
+        // After an order is placed the server has already emptied the cart
+        resetCart: () => setCart(EMPTY),
+    };
 
-  const removeFromCart = async (productId) =>
-    setCart(await cartApi.removeCartItem(productId));
-
-  // Used after checkout, when the server has emptied the cart
-  const reloadCart = async () => {
-    try {
-      setCart(await cartApi.getCart());
-    } catch (error) {
-      console.error("Could not reload the cart:", error);
-    }
-  };
-
-  // Total number of items (3 shirts + 1 mug = 4)
-  const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-
-  return (
-    <CartContext.Provider
-      value={{ cart, cartLoading, itemCount, addToCart, updateQuantity, removeFromCart, reloadCart }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+    return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
-export const useCart = () => {
-  return useContext(CartContext);
-};
+export const useCart = () => useContext(CartContext);

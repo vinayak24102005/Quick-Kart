@@ -1,153 +1,99 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Minus, Plus, Trash2 } from "lucide-react";
-import { useCart } from "../context/CartContext";
-import { formatPrice, getErrorMessage } from "../utils/format";
-import Alert from "../components/Alert";
+import { Link, useNavigate } from 'react-router-dom'
+import { Trash2 } from 'lucide-react'
+import { useCart } from '../context/CartContext'
+import Spinner from '../components/Spinner'
+import { formatPrice, calcShipping, FREE_SHIPPING_THRESHOLD } from '../utils/format'
 
 function Cart() {
-  const { cart, cartLoading, updateQuantity, removeFromCart } = useCart();
-  const navigate = useNavigate();
+  const { cart, loading, updateQuantity, removeFromCart, clearCart } = useCart()
+  const navigate = useNavigate()
 
-  const [busyId, setBusyId] = useState(null); // the product being changed right now
-  const [error, setError] = useState("");
-
-  // Runs one cart change, disables that row's buttons while waiting, shows any error
-  const run = async (productId, action) => {
-    setError("");
-    setBusyId(productId);
-    try {
-      await action();
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  if (cartLoading) {
-    return <div className="p-6 md:p-8 text-slate-500">Loading your cart...</div>;
-  }
+  if (loading && cart.items.length === 0) return <Spinner label="Loading your cart..." />
 
   if (cart.items.length === 0) {
     return (
-      <div className="p-6 md:p-8">
-        <h1 className="text-2xl font-bold text-slate-800">Your Cart</h1>
-        <div className="mt-6 bg-white border border-slate-200 rounded-xl p-10 text-center">
-          <p className="text-slate-500">Your cart is empty.</p>
-          <Link
-            to="/"
-            className="inline-block mt-4 bg-sky-500 hover:bg-sky-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition"
-          >
-            Start shopping
-          </Link>
-        </div>
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold text-slate-800">Your cart is empty</h1>
+        <p className="text-slate-500 mt-2">Add some products to get started.</p>
+        <Link to="/" className="inline-block mt-5 bg-sky-500 hover:bg-sky-600 text-white font-medium px-5 py-2.5 rounded-lg">
+          Browse products
+        </Link>
       </div>
-    );
+    )
   }
+
+  const shipping = calcShipping(cart.total)
 
   return (
     <div className="p-6 md:p-8 max-w-5xl">
-      <h1 className="text-2xl font-bold text-slate-800">Your Cart</h1>
-
-      <div className="mt-4">
-        <Alert>{error}</Alert>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-800">Shopping Cart</h1>
+        <button onClick={clearCart} className="text-sm text-red-500 hover:underline">Clear cart</button>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Items */}
-        <div className="lg:col-span-2 space-y-4">
-          {cart.items.map((item) => {
-            const product = item.product;
-            const busy = busyId === product._id;
+      <div className="mt-6 grid lg:grid-cols-3 gap-6">
+        <ul className="lg:col-span-2 space-y-3">
+          {cart.items.map((item) => (
+            <li key={item._id} className="flex gap-4 bg-white border border-slate-200 rounded-xl p-4">
+              <Link to={`/product/${item.product._id}`}>
+                <img src={item.product.image} alt={item.product.name} className="w-24 h-24 object-cover rounded-lg bg-slate-100" />
+              </Link>
+              <div className="flex-1 min-w-0">
+                <Link to={`/product/${item.product._id}`} className="font-semibold text-slate-800 hover:text-sky-600 line-clamp-1">
+                  {item.product.name}
+                </Link>
+                <p className="text-sm text-slate-500">{formatPrice(item.price)} each</p>
+                {item.quantity > item.product.stock && (
+                  <p className="text-xs text-red-500 mt-1">Only {item.product.stock} in stock — please reduce the quantity</p>
+                )}
 
-            return (
-              <div
-                key={item._id}
-                className="bg-white border border-slate-200 rounded-xl p-4 flex gap-4"
-              >
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-24 h-24 rounded-lg object-cover bg-slate-50 shrink-0"
-                />
-
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-800 truncate">{product.name}</h3>
-                  <p className="text-sm text-slate-500">{formatPrice(item.price)} each</p>
-
-                  <div className="mt-3 flex items-center gap-3">
-                    {/* Quantity - and + */}
-                    <div className="flex items-center border border-slate-200 rounded-lg">
-                      <button
-                        type="button"
-                        aria-label="Decrease quantity"
-                        disabled={busy || item.quantity <= 1}
-                        onClick={() => run(product._id, () => updateQuantity(product._id, item.quantity - 1))}
-                        className="p-2 text-slate-600 hover:bg-slate-50 disabled:text-slate-300 disabled:cursor-not-allowed"
-                      >
-                        <Minus size={16} />
-                      </button>
-                      <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                      <button
-                        type="button"
-                        aria-label="Increase quantity"
-                        disabled={busy || item.quantity >= product.stock}
-                        onClick={() => run(product._id, () => updateQuantity(product._id, item.quantity + 1))}
-                        className="p-2 text-slate-600 hover:bg-slate-50 disabled:text-slate-300 disabled:cursor-not-allowed"
-                      >
-                        <Plus size={16} />
-                      </button>
-                    </div>
-
-                    {/* Remove */}
+                <div className="mt-3 flex items-center gap-4">
+                  <div className="flex items-center border border-gray-300 rounded-lg">
                     <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => run(product._id, () => removeFromCart(product._id))}
-                      className="flex items-center gap-1 text-sm text-red-500 hover:text-red-600 disabled:opacity-50"
-                    >
-                      <Trash2 size={16} />
-                      Remove
-                    </button>
+                      className="px-3 py-1 disabled:opacity-40"
+                      disabled={item.quantity <= 1}
+                      onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
+                      aria-label="Decrease quantity"
+                    >−</button>
+                    <span className="w-8 text-center text-sm">{item.quantity}</span>
+                    <button
+                      className="px-3 py-1 disabled:opacity-40"
+                      disabled={item.quantity >= item.product.stock}
+                      onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
+                      aria-label="Increase quantity"
+                    >+</button>
                   </div>
+                  <button onClick={() => removeFromCart(item.product._id)} className="text-red-500 hover:text-red-600" aria-label="Remove item">
+                    <Trash2 size={18} />
+                  </button>
                 </div>
-
-                <p className="font-semibold text-slate-900">{formatPrice(item.totalPrice)}</p>
               </div>
-            );
-          })}
-        </div>
+              <p className="font-bold text-slate-900">{formatPrice(item.totalPrice)}</p>
+            </li>
+          ))}
+        </ul>
 
-        {/* Summary */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5">
-          <h2 className="font-semibold text-slate-800">Order Summary</h2>
-
-          <div className="mt-4 flex justify-between text-sm text-slate-600">
-            <span>Items</span>
-            <span>{cart.items.reduce((sum, item) => sum + item.quantity, 0)}</span>
-          </div>
-          <div className="mt-2 flex justify-between text-sm text-slate-600">
-            <span>Shipping</span>
-            <span>Free</span>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between font-semibold text-slate-900">
-            <span>Total</span>
-            <span>{formatPrice(cart.total)}</span>
-          </div>
-
+        <div className="bg-white border border-slate-200 rounded-xl p-5 h-fit">
+          <h2 className="font-semibold text-slate-800">Order summary</h2>
+          <dl className="mt-4 space-y-2 text-sm">
+            <div className="flex justify-between"><dt className="text-slate-500">Subtotal ({cart.itemCount} items)</dt><dd>{formatPrice(cart.total)}</dd></div>
+            <div className="flex justify-between"><dt className="text-slate-500">Shipping</dt><dd>{shipping === 0 ? 'Free' : formatPrice(shipping)}</dd></div>
+            <div className="flex justify-between border-t pt-3 text-base font-bold"><dt>Total</dt><dd>{formatPrice(cart.total + shipping)}</dd></div>
+          </dl>
+          {shipping > 0 && (
+            <p className="text-xs text-slate-400 mt-2">Free shipping on orders above {formatPrice(FREE_SHIPPING_THRESHOLD)}</p>
+          )}
           <button
-            type="button"
-            onClick={() => navigate("/checkout")}
-            className="mt-5 w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-2.5 rounded-lg transition shadow-md shadow-sky-100"
+            onClick={() => navigate('/checkout')}
+            disabled={cart.items.some((i) => i.quantity > i.product.stock)}
+            className="mt-5 w-full bg-sky-500 hover:bg-sky-600 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg transition shadow-md shadow-sky-100"
           >
-            Proceed to Checkout
+            Proceed to checkout
           </button>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default Cart;
+export default Cart

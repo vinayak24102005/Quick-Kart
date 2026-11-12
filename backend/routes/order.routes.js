@@ -1,14 +1,13 @@
 const router = require("express").Router();
-const orderController = require("../controllers/order.controllers");
+const c = require("../controllers/order.controllers");
 const { protect } = require("../middleware/authMiddleware");
 
-// Every order route needs a logged-in user
 router.use(protect);
 
-router.post("/", orderController.createOrder);
-router.get("/", orderController.getMyOrders);
-router.get("/:id", orderController.getOrderById);
-router.post("/:id/pay", orderController.payOrder);
-router.patch("/:id/cancel", orderController.cancelOrder);
+router.post("/", c.createOrder);
+router.get("/", c.getMyOrders);
+router.get("/:id", c.getOrderById);
+router.post("/:id/pay", c.payOrder);
+router.put("/:id/cancel", c.cancelOrder);
 
 module.exports = router;
